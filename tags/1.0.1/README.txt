@@ -53,10 +53,16 @@ Sure, if you are an Admin, just go to the plugin editor and wipe out the uninsta
 
 == Changelog ==
 
+= 1.0.1 =
+* Some small plugin meta data updates.
+
 = 1.0 =
 * Initial Release.
 
 == Upgrade Notice ==
+
+= 1.0.1 =
+Some small plugin meta data updates.
 
 = 1.0 =
 Initial Release, there is nothing to upgrade from.
