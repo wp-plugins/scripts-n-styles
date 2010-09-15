@@ -4,13 +4,13 @@ Donate link: http://wordpressfoundation.org/donate/
 Tags: admin, CSS, javascript, code, custom, Style
 Requires at least: 3.0.1
 Tested up to: 3.0.1
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 
-This plugin allows Admin users to individually add custom CSS and JavaScript directly to Post, Pages or any other registered custom post types.
+This plugin allows Admin users to individually add custom CSS, Classes and JavaScript directly to Post, Pages or any other custom post types.
 
 == Description ==
 
-This plugin allows Admin users the ability to add custom CSS (at the bottom of the 'head' tag) and JavaScript (at the bottom of the 'body' tag) directly into individual Post, Pages or any other registered custom post types.
+This plugin allows Admin users the ability to add custom CSS (at the bottom of the `head` tag) and JavaScript (at the bottom of the `body` tag) directly into individual Post, Pages or any other registered custom post types. You can also add classes to the body tag and the post container (if your theme supports `body_class()` and `post_class()` functions).
 
 Because only well trusted users should ever be allowed to insert JavaScript directly into the pages of your site, this plugin restricts usage to admin type users. Admin's have access to even more sensitive areas by definition, so that should be relatively safe ;)
 
@@ -37,13 +37,20 @@ Well, because plugins are supposed to, and should be expected to clean up after 
 
 = Can I get around that somehow? =
 
-Sure, if you are an Admin, just go to the plugin editor and wipe out the uninstall.php (Replace everything with a space character) and then WordPress will not delete the meta data on uninstall.
+Sure, if you are an Admin, just go to the plugin editor and wipe out the `uninstall.php` (Replace everything with a space character) and then WordPress will not delete the meta data on uninstall.
 
 == Screenshots ==
 
-I'll add a screenshot in the version with syntax highlighting, but for now, the plugin only adds very simple Meta Boxes.
+1. The New and Improved Meta Box.
 
 == Changelog ==
+
+= 1.0.2 =
+* Added fields for body_class and post_class
+* Merged meta boxes
+* Cleaned up code
+* Improved compatibility
+* Added Screenshot
 
 = 1.0.1 =
 * Some small plugin meta data updates.
@@ -53,8 +60,8 @@ I'll add a screenshot in the version with syntax highlighting, but for now, the 
 
 == Upgrade Notice ==
 
+= 1.0.2 =
+Minor update. Adds a few new features.
+
 = 1.0.1 =
 Some small plugin meta data updates.
-
-= 1.0 =
-Initial Release, there is nothing to upgrade from.
