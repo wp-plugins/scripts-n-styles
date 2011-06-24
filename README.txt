@@ -2,15 +2,15 @@
 Contributors: WraithKenny, Touvan
 Donate link: http://wordpressfoundation.org/donate/
 Tags: admin, CSS, javascript, code, custom, Style
-Requires at least: 3.0.1
-Tested up to: 3.1.2
-Stable tag: 1.0.2
+Requires at least: 3.1
+Tested up to: 3.2
+Stable tag: 2
 
 This plugin allows Admin users to individually add custom CSS, Classes and JavaScript directly to Post, Pages or any other custom post types.
 
 == Description ==
 
-This plugin allows Admin users the ability to add custom CSS (at the bottom of the `head` tag) and JavaScript (at the bottom of the `body` tag) directly into individual Post, Pages or any other registered custom post types. You can also add classes to the body tag and the post container (if your theme supports `body_class()` and `post_class()` functions).
+This plugin allows Admin users the ability to add custom CSS (at the bottom of the 'head' tag) and JavaScript (at the bottom of the 'body' tag) directly into individual Post, Pages or any other registered custom post types. You can also add classes to the body tag and the post container (if your theme supports `body_class()` and `post_class()` functions).
 
 Because only well trusted users should ever be allowed to insert JavaScript directly into the pages of your site, this plugin restricts usage to admin type users. Admin's have access to even more sensitive areas by definition, so that should be relatively safe ;)
 
@@ -37,7 +37,7 @@ Well, because plugins are supposed to, and should be expected to clean up after 
 
 = Can I get around that somehow? =
 
-Sure, if you are an Admin, just go to the plugin editor and wipe out the `uninstall.php` (Replace everything with a space character) and then WordPress will not delete the meta data on uninstall.
+Sure, if you are an Admin, just go to the plugin editor and wipe out the uninstall.php (Replace everything with a space character) and then WordPress will not delete the meta data on uninstall.
 
 == Screenshots ==
 
@@ -45,8 +45,19 @@ Sure, if you are an Admin, just go to the plugin editor and wipe out the `uninst
 
 == Changelog ==
 
+= 2 =
+* Better selection of `post_types` to add Scripts-n-Styles
+* micro-optimization for storage of class names.
+* Adds option page for globally adding Scripts and Styles.
+* Defined a later priority for Scripts n Styles to print after other scripts and styles.
+* Added a box for Scripts to be included in the `head`.
+* Better adherence to coding standards.
+* Tabbed interface on metabox
+* added CodeMirror
+* began contextual help
+
 = 1.0.2 =
-* Added fields for body_class and post_class
+* Added fields for `body_clas`s and `post_class`
 * Merged meta boxes
 * Cleaned up code
 * Improved compatibility
@@ -60,8 +71,17 @@ Sure, if you are an Admin, just go to the plugin editor and wipe out the `uninst
 
 == Upgrade Notice ==
 
+= 2 =
+Adds new features.
+
+= 1.0.3 =
+Adds a few new features.
+
 = 1.0.2 =
 Minor update. Adds a few new features.
 
 = 1.0.1 =
 Some small plugin meta data updates.
+
+= 1.0 =
+Initial Release, there is nothing to upgrade from.
