@@ -13,7 +13,7 @@ class SnS_Admin
      * Constants
      */
 	const MENU_SLUG = 'Scripts-n-Styles';
-	const VERSION = '2.0.3';
+	const VERSION = '2.0.2';
     /**#@-*/
 	
     /**
