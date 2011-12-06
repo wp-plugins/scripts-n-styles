@@ -1,14 +1,24 @@
 /* Options.css */
 
+textarea.code {
+	display: block;
+}
 .CodeMirror {
 	border: 1px solid #DFDFDF;
 	background-color: white;
 	border-radius: 3px;
 	margin: 8px 0;
+	-moz-background-clip: padding;
+	-webkit-background-clip: padding-box;
+	background-clip: padding-box;
+	overflow: hidden;
 }
-.CodeMirror-scroll {
+body .CodeMirror-scroll {
 	height: auto;
 	min-height: 50px;
 	max-height: 300px;
 	overflow: auto;
+}
+#icon-sns {
+	background: no-repeat center url('../images/icon32.png');
 }

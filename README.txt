@@ -2,23 +2,26 @@
 Contributors: WraithKenny, Touvan
 Donate link: http://wordpressfoundation.org/donate/
 Tags: admin, CSS, javascript, code, custom, Style
-Requires at least: 3.1
-Tested up to: 3.3
+Requires at least: 3.2
+Tested up to: 3.3-RC1
 Stable tag: 2.0.4
+License: GPLv2 or later
 
 This plugin allows Admin users to individually add custom CSS, Classes and JavaScript directly to Post, Pages or any other custom post types.
 
 == Description ==
 
-This plugin allows Admin users the ability to add custom CSS (at the bottom of the 'head' tag) and JavaScript (at the bottom of the 'body' tag) directly into individual Post, Pages or any other registered custom post types. You can also add classes to the body tag and the post container (if your theme supports `body_class()` and `post_class()` functions).
+This plugin allows Admin users the ability to add custom CSS and JavaScript directly into individual Post, Pages or any other registered custom post types. You can also add classes to the body tag and the post container. There is a Global settings page for which you can write Scripts n Styles for the entire blog.
+
+Admin's can also add classes to the TinyMCE "Formats" dropdown which users can use to style posts and pages directly. As of Scripts n Styles 3+ styles are reflected in the post editor.
 
 Because only well trusted users should ever be allowed to insert JavaScript directly into the pages of your site, this plugin restricts usage to admin type users. Admin's have access to even more sensitive areas by definition, so that should be relatively safe ;)
 
 A few notes about the implementation:
 
-*   Admin users, or more specifically, *any user with the `manage_options` capability* (which by default is *only* the admin type user) can use this plugin's functionality. Some plugins extend user rolls, and so this plugin would naturally extend include rolls that have the appropriate capability.
-*   CSS Styles are included inline, not linked, at the bottom of the `head` element with `style` tags by using `wp-head`. If your theme doesn't have this hook, this plugin (as well as most others) won't work.
-*   JavaScript is included inline, not linked, at the bottom of the `body` element with `script` tags by using `wp-footer`. If your theme doesn't have this hook, this plugin (as well as most others) won't work.
+*   Admin users, or more specifically, *any user with the `manage_options` and `unfiltered_html` capabilities* (which by default is *only* the admin type user) can use this plugin's functionality. Some plugins extend user rolls, and so this plugin would naturally extend include rolls that have the appropriate capability.
+*   CSS Styles are embeded, not linked, at the bottom of the `head` element with `style` tags by using `wp-head`. If your theme doesn't have this hook, this plugin (as well as most others) won't work.
+*   JavaScript is embeded, not linked, at the bottom of the `body` (or `head`) element with `script` tags by using `wp-footer` (or `wp-head`). If your theme doesn't have this hook, this plugin (as well as most others) won't work.
 *   **There is no input validation.** This plugin puts exactly what you type in the meta box directly into the `html` with no error checking. You are an Admin, and we trust you to be carefull. Try not to break anything.
 
 == Installation ==
@@ -37,15 +40,31 @@ Well, because plugins are supposed to, and should be expected to clean up after 
 
 = Can I get around that somehow? =
 
-Sure, if you are an Admin, just go to the plugin editor and wipe out the uninstall.php (Replace everything with a space character) and then WordPress will not delete the meta data on uninstall.
+Sure, if you are an Admin, just go to the plugin editor and wipe out the uninstall.php and then WordPress will not delete the meta data on uninstall.
 
 == Screenshots ==
 
-1. The New and Improved Meta Box.
+1. Settings Page for Writing Scripts n Styles that apply to the whole blog.
+2. The Scripts panel of the Meta Box.
+3. The Styles panel of the Meta Box.
+4. The Classes panel. Add classes to the Style dropdown!
+5. Enqueue panel. You can enqueue jQuery from here if you need!
+6. Your styles are reflected in the Editor.
 
 == Changelog ==
 
-= 2 =
+= 3 =
+* AJAX Saving of Meta-box
+* Dynamically populate the Styles Dropdown for TinyMCE
+* Styles preview in Post Editor
+* Enqueue dependant scripts if you need (like jQuery)
+* Adjustable menu placement
+* CodeMirror Themes
+
+= 2.0.3 =
+* fixed some bugs
+
+= 2.0.1 =
 * Better selection of `post_types` to add Scripts-n-Styles
 * micro-optimization for storage of class names.
 * Adds option page for globally adding Scripts and Styles.
@@ -70,6 +89,9 @@ Sure, if you are an Admin, just go to the plugin editor and wipe out the uninsta
 * Initial Release.
 
 == Upgrade Notice ==
+
+= 3 =
+Adds new features.
 
 = 2 =
 Adds new features.

@@ -5,15 +5,17 @@ Plugin URI: http://www.unfocus.com/projects/scripts-n-styles/
 Description: Allows WordPress admin users the ability to add custom CSS and JavaScript directly to individual Post, Pages or custom post types.
 Author: unFocus Projects
 Author URI: http://www.unfocus.com/
-Version: 2.0.4
-License: GPL2
+Version: 3.beta.3.2
+License: GPLv2 or later
 Network: true
 */
+
 /*  Copyright 2010-2011  Kenneth Newman  www.unfocus.com
 
-	This program is free software; you can redistribute it and/or modify
-	it under the terms of the GNU General Public License, version 2, as 
-	published by the Free Software Foundation.
+	This program is free software; you can redistribute it and/or
+	modify it under the terms of the GNU General Public License
+	as published by the Free Software Foundation; either version 2
+	of the License, or (at your option) any later version.
 	
 	This program is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -22,7 +24,7 @@ Network: true
 	
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
-	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 
 /**
@@ -44,21 +46,24 @@ Network: true
  * @link http://www.unfocus.com/projects/scripts-n-styles/ Plugin URI
  * @author unFocus Projects
  * @link http://www.unfocus.com/ Author URI
- * @version 2.0.4
+ * @version 3.beta.3.2
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
- * @copyright Copyright (c) 2010-2011, Kenneth Newman
- * @todo Add Post Type Selection on Options Page? Not sure that's usefull.
+ * @copyright Copyright (c) 2010 - 2011, Kenneth Newman
+ * 
+ * @todo Add Post Type Selection on Options Page? Not sure that's useful.
  * @todo Add Conditional Tags support as alternative to Globally applying Scripts n Styles.
  * @todo Create ability to add and register scripts and styles for enqueueing (via Options page).
  * @todo Create selection on Option page of which to pick registered scripts to make available on edit screens.
  * @todo Create shortcode to embed html/javascript snippets. See http://scribu.net/wordpress/optimal-script-loading.html in which this is already figured out :-)
  * @todo Create shortcode registration on Options page to make those snippets available on edit screens.
  * @todo Create shortcode registration of html snippets on edit screens for single use.
- * @todo Figure out and add Error messaging.
- * @todo Add ability to push class names into the TinyMCE editor Style Dropdown.
+ * @todo Add Error messaging.
  * @todo Replace Multi-Select element with something better.
- * @todo Clean up Usage Table, paginate, don't display when empty.
- * @todo "Include Scripts" will be reintroduced when registing is finished.
+ * @todo "Include Scripts" will be reintroduced when registering is finished.
+ * @todo Clean up tiny_mce_before_init in SnS_Admin_Meta_Box.
+ * @todo LESS.js support.
+ * @todo LESS.js highlighting support to CodeMirror.
+ * @todo Solarize theme to CodeMirror.
  */
 
 class Scripts_n_Styles
@@ -67,8 +72,6 @@ class Scripts_n_Styles
      * @static
      */
 	static $file = __FILE__;
-	static $hook_suffix; // 'tools_page_Scripts-n-Styles';
-	static $plugin_file; // 'scripts-n-styles/scripts-n-styles.php'; kept here for reference
     /**#@-*/
 	
     /**
@@ -91,36 +94,17 @@ class Scripts_n_Styles
 		add_filter( 'post_class', array( __CLASS__, 'post_classes' ) );
 		
 		add_action( 'wp_head', array( __CLASS__, 'styles' ), 11 );
-		//add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_scripts' ), 11 );
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_scripts' ), 11 );
 		add_action( 'wp_head', array( __CLASS__, 'scripts_in_head' ), 11 );
 		add_action( 'wp_footer', array( __CLASS__, 'scripts' ), 11 );
 	}
 	
-    /**
-	 * Utility Method: Returns the value of $scripts if it is set, and if not, sets it via a call to the database.
-	 * @return array 'ufp_script' meta data entry.
-     */
-	static function get_scripts() {
-		global $post;
-		return get_post_meta( $post->ID, 'uFp_scripts', true );
-	}
-	
-    /**
-	 * Utility Method: Returns the value of $styles if it is set, and if not, sets it via a call to the database.
-	 * @return array 'ufp_styles' meta data entry.
-     */
-	static function get_styles() {
-		global $post;
-		return get_post_meta( $post->ID, 'uFp_styles', true );
-	}
-	
-    /**
+	/**
 	 * Utility Method
      */
 	static function get_wp_registered() {
 		return array(
 				// Starting with the list of Scripts registered by default on the Theme side (index page of twentyten).
-				// This list should be trimmed down, as some probably aren't apporpriate for Theme enqueueing.
 				'l10n',
 				'utils',
 				'common',
@@ -197,7 +181,9 @@ class Scripts_n_Styles
 		
 		if ( ! is_singular() ) return;
 		// Individual
-		$styles = self::get_styles();
+		global $post;
+		$SnS = get_post_meta( $post->ID, '_SnS', true );
+		$styles = isset( $SnS['styles'] ) ? $SnS[ 'styles' ]: array();
 		if ( ! empty( $styles ) && ! empty( $styles[ 'styles' ] ) ) {
 			?><style type="text/css"><?php
 			echo $styles[ 'styles' ];
@@ -220,7 +206,9 @@ class Scripts_n_Styles
 		
 		if ( ! is_singular() ) return;
 		// Individual
-		$scripts = self::get_scripts();
+		global $post;
+		$SnS = get_post_meta( $post->ID, '_SnS', true );
+		$scripts = isset( $SnS['scripts'] ) ? $SnS[ 'scripts' ]: array();
 		if ( ! empty( $scripts ) && ! empty( $scripts[ 'scripts' ] ) ) {
 			?><script type="text/javascript"><?php
 			echo $scripts[ 'scripts' ];
@@ -235,7 +223,7 @@ class Scripts_n_Styles
 	static function scripts_in_head() {
 		// Global
 		$options = get_option( 'SnS_options' );
-		if ( ! empty( $options ) && ! empty($options[ 'scripts_in_head' ]) ) {
+		if ( ! empty( $options ) && ! empty( $options[ 'scripts_in_head' ] ) ) {
 			?><script type="text/javascript"><?php
 			echo $options[ 'scripts_in_head' ];
 			?></script><?php
@@ -243,7 +231,9 @@ class Scripts_n_Styles
 		
 		if ( ! is_singular() ) return;
 		// Individual
-		$scripts = self::get_scripts();
+		global $post;
+		$SnS = get_post_meta( $post->ID, '_SnS', true );
+		$scripts = isset( $SnS['scripts'] ) ? $SnS[ 'scripts' ]: array();
 		if ( ! empty( $scripts ) && ! empty( $scripts[ 'scripts_in_head' ] ) ) {
 			?><script type="text/javascript"><?php
 			echo $scripts[ 'scripts_in_head' ];
@@ -259,9 +249,11 @@ class Scripts_n_Styles
 	 * @return array $classes 
      */
 	static function body_classes( $classes ) {
-		if ( ! is_singular() ) return $classes;
+		if ( ! is_singular() || is_admin() ) return $classes;
 		
-		$styles = self::get_styles();
+		global $post;
+		$SnS = get_post_meta( $post->ID, '_SnS', true );
+		$styles = isset( $SnS['styles'] ) ? $SnS[ 'styles' ]: array();
 		if ( ! empty( $styles ) && ! empty( $styles[ 'classes_body' ] ) )
 			$classes = array_merge( $classes, explode( " ", $styles[ 'classes_body' ] ) );
 		
@@ -271,14 +263,16 @@ class Scripts_n_Styles
     /**
 	 * Theme Filter: 'post_class()'
 	 * Adds classes to the Theme's post container.
-	 * @uses self::get_styles()
 	 * @param array $classes 
 	 * @return array $classes 
      */
 	static function post_classes( $classes ) {
-		if ( ! is_singular() ) return $classes;
+		if ( ! is_singular() || is_admin() ) return $classes;
 		
-		$styles = self::get_styles();
+		global $post;
+		$SnS = get_post_meta( $post->ID, '_SnS', true );
+		$styles = isset( $SnS['styles'] ) ? $SnS[ 'styles' ]: array();
+		
 		if ( ! empty( $styles ) && ! empty( $styles[ 'classes_post' ] ) )
 			$classes = array_merge( $classes, explode( " ", $styles[ 'classes_post' ] ) );
 		
@@ -288,21 +282,24 @@ class Scripts_n_Styles
     /**
 	 * Theme Action: 'wp_enqueue_scripts'
 	 * Enqueues chosen Scripts.
-	 * @uses self::get_enqueue()
-	 * @uses self::get_scripts()
      */
 	static function enqueue_scripts() {
 		// Global
-		$enqueue_scripts = get_option( 'SnS_enqueue_scripts' );
+		$options = get_option( 'SnS_options' );
+		if ( ! isset( $options[ 'enqueue_scripts' ] ) )
+			$enqueue_scripts = array();
+		else
+			$enqueue_scripts = $options[ 'enqueue_scripts' ];
 
-		if ( is_array( $enqueue_scripts ) ) {
-			foreach ( $enqueue_scripts as $handle )
-				wp_enqueue_script( $handle );
-		}
+		foreach ( $enqueue_scripts as $handle )
+			wp_enqueue_script( $handle );
 		
 		if ( ! is_singular() ) return;
 		// Individual
-		$scripts = self::get_scripts();
+		global $post;
+		$SnS = get_post_meta( $post->ID, '_SnS', true );
+		$scripts = isset( $SnS['scripts'] ) ? $SnS[ 'scripts' ]: array();
+		
 		if ( ! empty( $scripts[ 'enqueue_scripts' ] ) && is_array( $scripts[ 'enqueue_scripts' ] ) ) {
 			foreach ( $scripts[ 'enqueue_scripts' ] as $handle )
 				wp_enqueue_script( $handle );
