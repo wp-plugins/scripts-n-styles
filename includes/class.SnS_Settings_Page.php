@@ -19,7 +19,7 @@ class SnS_Settings_Page
      * @static
      */
 	function init() {
-		$hook_suffix = add_submenu_page( SnS_Admin::$parent_slug, 'Scripts n Styles', 'Settings', 'unfiltered_html', self::MENU_SLUG, array( 'SnS_Form', 'page' ) );
+		$hook_suffix = add_submenu_page( SnS_Admin::$parent_slug, __( 'Scripts n Styles', 'scripts-n-styles' ), __( 'Settings' ), 'unfiltered_html', self::MENU_SLUG, array( 'SnS_Form', 'page' ) );
 		
 		add_action( "load-$hook_suffix", array( __CLASS__, 'admin_load' ) );
 		add_action( "load-$hook_suffix", array( 'SnS_Admin', 'help' ) );
@@ -37,13 +37,13 @@ class SnS_Settings_Page
 		$options = get_option( 'SnS_options' );
 		$cm_theme = isset( $options[ 'cm_theme' ] ) ? $options[ 'cm_theme' ] : 'default';
 		
-		wp_enqueue_style( 'sns-options-styles', plugins_url('css/options-styles.css', Scripts_n_Styles::$file), array( 'codemirror' ), SnS_Admin::VERSION );
+		wp_enqueue_style( 'sns-options-styles', plugins_url('css/options-styles.css', Scripts_n_Styles::$file), array( 'codemirror' ), Scripts_n_Styles::VERSION );
 		wp_enqueue_style( 'codemirror', plugins_url( 'libraries/CodeMirror2/lib/codemirror.css', Scripts_n_Styles::$file), array(), '2.18' );
 		
 		foreach ( array( 'cobalt', 'default', 'eclipse', 'elegant', 'monokai', 'neat', 'night', 'rubyblue' ) as $theme )
 			wp_enqueue_style( "codemirror-$theme", plugins_url( "libraries/CodeMirror2/theme/$theme.css", Scripts_n_Styles::$file), array( 'codemirror' ), '2.18' );
 		
-		wp_enqueue_script( 'sns-settings-page-scripts', plugins_url('js/settings-page.js', Scripts_n_Styles::$file), array( 'jquery', 'codemirror-css', 'codemirror-javascript' ), SnS_Admin::VERSION, true );
+		wp_enqueue_script( 'sns-settings-page-scripts', plugins_url('js/settings-page.js', Scripts_n_Styles::$file), array( 'jquery', 'codemirror-css', 'codemirror-javascript' ), Scripts_n_Styles::VERSION, true );
 		wp_localize_script( 'sns-settings-page-scripts', 'codemirror_options', array( 'theme' => $cm_theme ) );
 		wp_enqueue_script( 'codemirror', plugins_url( 'libraries/CodeMirror2/lib/codemirror.js', Scripts_n_Styles::$file), array(), '2.18' );
 		wp_enqueue_script( 'codemirror-css', plugins_url( 'libraries/CodeMirror2/mode/css/css.js', Scripts_n_Styles::$file), array( 'codemirror' ), '2.18' );
@@ -66,7 +66,7 @@ class SnS_Settings_Page
 	 * Adds Admin Menu Item via WordPress' "Administration Menus" API. Also hook actions to register options via WordPress' Settings API.
      */
 	function admin_load() {
-		wp_enqueue_style( 'sns-options-styles', plugins_url('css/options-styles.css', Scripts_n_Styles::$file), array(), SnS_Admin::VERSION );
+		wp_enqueue_style( 'sns-options-styles', plugins_url('css/options-styles.css', Scripts_n_Styles::$file), array(), Scripts_n_Styles::VERSION );
 		
 		register_setting(
 			SnS_Admin::OPTION_GROUP,
@@ -74,13 +74,13 @@ class SnS_Settings_Page
 		
 		add_settings_section(
 			'settings',
-			'Scripts n Styles Settings',
+			__( 'Scripts n Styles Settings', 'scripts-n-styles' ),
 			array( __CLASS__, 'settings_section' ),
 			SnS_Admin::MENU_SLUG );
 		
 		add_settings_field(
 			'menu_position',
-			'<strong>Menu Position</strong>: ',
+			__( '<strong>Menu Position</strong>: ', 'scripts-n-styles' ),
 			array( 'SnS_Form', 'select' ),
 			SnS_Admin::MENU_SLUG,
 			'settings',
@@ -94,7 +94,7 @@ class SnS_Settings_Page
 		
 		add_settings_field(
 			'cm_theme',
-			'<strong>CodeMirror Theme</strong>: ',
+			__( '<strong>CodeMirror Theme</strong>: ', 'scripts-n-styles' ),
 			array( 'SnS_Form', 'select' ),
 			SnS_Admin::MENU_SLUG,
 			'settings',
@@ -106,9 +106,24 @@ class SnS_Settings_Page
 				'style' => 'height: auto;'
 			) );
 		
+		add_settings_field(
+			'metabox',
+			__( '<strong>Hide Metabox by default</strong>: ', 'scripts-n-styles' ),
+			array( 'SnS_Form', 'radio' ),
+			SnS_Admin::MENU_SLUG,
+			'settings',
+			array(
+				'label_for' => 'metabox',
+				'setting' => 'SnS_options',
+				'choices' => array( 'yes', 'no' ),
+				'default' => 'yes',
+				'legend' => __( 'Hide Metabox by default', 'scripts-n-styles' ),
+				'description' => __( '<span class="description" style="max-width: 500px; display: inline-block;">This is overridable via Screen Options on each edit screen.</span>', 'scripts-n-styles' )
+			) );
+		
 		add_settings_section(
 			'demo',
-			'Code Mirror Demo',
+			__( 'Code Mirror Demo', 'scripts-n-styles' ),
 			array( __CLASS__, 'demo_section' ),
 			SnS_Admin::MENU_SLUG );
 	}
@@ -120,7 +135,7 @@ class SnS_Settings_Page
 	function settings_section() {
 		?>
 		<div style="max-width: 55em;">
-			<p>Control how and where Scripts n Styles menus and metaboxes appear. These options are here because sometimes users really care about this stuff. Feel free to adjust to your liking. :-)</p>
+			<p><?php _e( 'Control how and where Scripts n Styles menus and metaboxes appear. These options are here because sometimes users really care about this stuff. Feel free to adjust to your liking. :-)', 'scripts-n-styles' ) ?></p>
 		</div>
 		<?php
 	}

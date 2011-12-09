@@ -5,7 +5,7 @@ Plugin URI: http://www.unfocus.com/projects/scripts-n-styles/
 Description: Allows WordPress admin users the ability to add custom CSS and JavaScript directly to individual Post, Pages or custom post types.
 Author: unFocus Projects
 Author URI: http://www.unfocus.com/
-Version: 3
+Version: 3.0
 License: GPLv2 or later
 Network: true
 */
@@ -46,7 +46,7 @@ Network: true
  * @link http://www.unfocus.com/projects/scripts-n-styles/ Plugin URI
  * @author unFocus Projects
  * @link http://www.unfocus.com/ Author URI
- * @version 3
+ * @version 3.0
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @copyright Copyright (c) 2010 - 2011, Kenneth Newman
  * 
@@ -71,6 +71,7 @@ class Scripts_n_Styles
     /**#@+
      * @static
      */
+	const VERSION = '3.0';
 	static $file = __FILE__;
     /**#@-*/
 	
@@ -79,7 +80,6 @@ class Scripts_n_Styles
      * @static
      */
 	static function init() {
-		
 		if ( is_admin() && ! ( defined('DISALLOW_UNFILTERED_HTML') && DISALLOW_UNFILTERED_HTML ) ) {
 			/*	NOTE: Setting the DISALLOW_UNFILTERED_HTML constant to
 				true in the wp-config.php would effectively disable this
@@ -87,8 +87,8 @@ class Scripts_n_Styles
 			*/
 			include_once( 'includes/class.SnS_Admin.php' );
 			SnS_Admin::init();
-			
 		}
+		add_action( 'plugins_loaded', array( __CLASS__, 'upgrade_check' ) );
 		
 		add_filter( 'body_class', array( __CLASS__, 'body_classes' ) );
 		add_filter( 'post_class', array( __CLASS__, 'post_classes' ) );
@@ -306,6 +306,16 @@ class Scripts_n_Styles
 		}
 	}
 	
+    /**
+	 * Utility Method: Compares VERSION to stored 'version' value.
+     */
+	static function upgrade_check() {
+		$options = get_option( 'SnS_options' );
+		if ( ! isset( $options[ 'version' ] ) || version_compare( self::VERSION, $options[ 'version' ], '>' ) ) {
+			include_once( 'includes/class.SnS_Admin.php' );
+			SnS_Admin::upgrade();
+		}
+	}
 }
 
 Scripts_n_Styles::init();
