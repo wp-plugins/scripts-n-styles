@@ -8,6 +8,7 @@
  */
  
 require_once( 'class.SnS_Admin_Meta_Box.php' );
+require_once( 'class.SnS_Admin_Code_Editor.php' );
 require_once( 'class.SnS_Settings_Page.php' );
 require_once( 'class.SnS_Usage_Page.php' );
 require_once( 'class.SnS_Global_Page.php' );
@@ -16,20 +17,22 @@ require_once( 'class.SnS_Form.php' );
 
 class SnS_Admin
 {
-    /**#@+
-     * Constants
-     */
+	/**#@+
+	 * Constants
+	 */
 	const OPTION_GROUP = 'scripts_n_styles';
 	const MENU_SLUG = 'sns';
 	static $parent_slug = '';
-    /**#@-*/
+	/**#@-*/
 	
-    /**
+	/**
 	 * Initializing method.
-     * @static
-     */
+	 * @static
+	 */
 	static function init() {
 		add_action( 'admin_menu', array( 'SnS_Admin_Meta_Box', 'init' ) );
+		add_action( 'admin_menu', array( 'SnS_Admin_Code_Editor', 'init' ) );
+		add_action( 'network_admin_menu', array( 'SnS_Admin_Code_Editor', 'init' ) );
 		
 		add_action( 'admin_menu', array( __CLASS__, 'menu' ) );
 		
@@ -75,9 +78,9 @@ class SnS_Admin
 		SnS_Usage_Page::init();
 	}
 	
-    /**
+	/**
 	 * Nav Tabs
-     */
+	 */
 	function nav() {
 		$options = get_option( 'SnS_options' );
 		$page = $_REQUEST[ 'page' ];
@@ -94,54 +97,40 @@ class SnS_Admin
 		<?php
 	}
 	
-    /**
+	/**
 	 * Settings Page help
-     */
+	 */
 	function help() {
-		global $wp_version; // Back Compat for now
-		if ( version_compare( $wp_version, '3.2.1', '>') ) {
-			$screen = get_current_screen();
-			if ( 'post' != $screen->id ) {
-				$screen->add_help_tab( array(
-					'title' => __( 'Scripts n Styles', 'scripts-n-styles' ),
-					'id' => 'scripts-n-styles',
-					'content' => 
-						'<p>' . __( '<p>In default (non MultiSite) WordPress installs, both <em>Administrators</em> and 
-						<em>Editors</em> can access <em>Scripts-n-Styles</em> on individual edit screens. 
-						Only <em>Administrators</em> can access this Options Page. In MultiSite WordPress installs, only 
-						<em>"Super Admin"</em> users can access either
-						<em>Scripts-n-Styles</em> on individual edit screens or this Options Page. If other plugins change 
-						capabilities (specifically "unfiltered_html"), 
-						other users can be granted access.</p>', 'scripts-n-styles' ) . '</p>'
-					)
-				);
-				$screen->set_help_sidebar(
-					'<p><strong>' . __( 'For more information:', 'scripts-n-styles' ) . '</strong></p>' .
+		$help    = '<p>' . __( 'In default (non MultiSite) WordPress installs, both <em>Administrators</em> and <em>Editors</em> can access <em>Scripts-n-Styles</em> on individual edit screens. Only <em>Administrators</em> can access this Options Page. In MultiSite WordPress installs, only <em>"Super Admin"</em> users can access either <em>Scripts-n-Styles</em> on individual edit screens or this Options Page. If other plugins change capabilities (specifically "unfiltered_html"), other users can be granted access.', 'scripts-n-styles' ) . '</p>';
+		$help   .= '<p><strong>' . __( 'Reference: jQuery Wrappers', 'scripts-n-styles' ) . '</strong></p>' .
+				   '<pre><code>jQuery(document).ready(function($) {
+	// $() will work as an alias for jQuery() inside of this function
+	});</code></pre>';
+		$help   .= '<pre><code>(function($) {
+	// $() will work as an alias for jQuery() inside of this function
+	})(jQuery);</code></pre>';
+		$sidebar = '<p><strong>' . __( 'For more information:', 'scripts-n-styles' ) . '</strong></p>' .
 					'<p>' . __( '<a href="http://wordpress.org/extend/plugins/scripts-n-styles/faq/" target="_blank">Frequently Asked Questions</a>', 'scripts-n-styles' ) . '</p>' .
 					'<p>' . __( '<a href="https://github.com/unFocus/Scripts-n-Styles" target="_blank">Source on github</a>', 'scripts-n-styles' ) . '</p>' .
-					'<p>' . __( '<a href="http://wordpress.org/tags/scripts-n-styles" target="_blank">Support Forums</a>', 'scripts-n-styles' ) . '</p>'
-				);
-			} else {
-				$screen->add_help_tab( array(
-					'title' => __( 'Scripts n Styles', 'scripts-n-styles' ),
-					'id' => 'scripts-n-styles',
-					'content' => 
-						'<p>' . __( '<p>In default (non MultiSite) WordPress installs, both <em>Administrators</em> and 
-						<em>Editors</em> can access <em>Scripts-n-Styles</em> on individual edit screens. 
-						Only <em>Administrators</em> can access this Options Page. In MultiSite WordPress installs, only 
-						<em>"Super Admin"</em> users can access either
-						<em>Scripts-n-Styles</em> on individual edit screens or this Options Page. If other plugins change 
-						capabilities (specifically "unfiltered_html"), 
-						other users can be granted access.</p>', 'scripts-n-styles' ) . '</p>'
-					)
-				);
-			}
+					'<p>' . __( '<a href="http://wordpress.org/tags/scripts-n-styles" target="_blank">Support Forums</a>', 'scripts-n-styles' ) . '</p>';
+		$screen = get_current_screen();
+		if ( method_exists( $screen, 'add_help_tab' ) ) {
+			$screen->add_help_tab( array(
+				'title' => __( 'Scripts n Styles', 'scripts-n-styles' ),
+				'id' => 'scripts-n-styles',
+				'content' => $help
+				)
+			);
+			if ( 'post' != $screen->id ) 
+				$screen->set_help_sidebar( $sidebar );
+		} else {
+			add_contextual_help( $screen, $help . $sidebar );
 		}
 	}
 	
-    /**
+	/**
 	 * Utility Method: Sets defaults if not previously set. Sets stored 'version' to VERSION.
-     */
+	 */
 	static function upgrade() {
 		$options = get_option( 'SnS_options' );
 		if ( ! $options ) $options = array();
@@ -190,14 +179,14 @@ class SnS_Admin
 			delete_post_meta( $post->ID, '_SnS_styles' );
 			delete_post_meta( $post->ID, '_SnS_scripts' );
 		}
-
+	
 	}
 	
-    /**
+	/**
 	 * Adds link to the Settings Page in the WordPress "Plugin Action Links" array.
 	 * @param array $actions
 	 * @return array
-     */
+	 */
 	static function plugin_action_links( $actions ) {
 		$actions[ 'settings' ] = '<a href="' . menu_page_url( SnS_Settings_Page::MENU_SLUG, false ) . '"/>' . __( 'Settings' ) . '</a>';
 		return $actions;

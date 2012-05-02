@@ -9,15 +9,15 @@
 		
 class SnS_Settings_Page
 {
-    /**
-     * Constants
-     */
+	/**
+	 * Constants
+	 */
 	const MENU_SLUG = 'sns_settings';
 	
-    /**
+	/**
 	 * Initializing method.
-     * @static
-     */
+	 * @static
+	 */
 	function init() {
 		$hook_suffix = add_submenu_page( SnS_Admin::$parent_slug, __( 'Scripts n Styles', 'scripts-n-styles' ), __( 'Settings' ), 'unfiltered_html', self::MENU_SLUG, array( 'SnS_Form', 'page' ) );
 		
@@ -35,23 +35,23 @@ class SnS_Settings_Page
 	
 	function admin_enqueue_scripts() {
 		$options = get_option( 'SnS_options' );
-		$cm_theme = isset( $options[ 'cm_theme' ] ) ? $options[ 'cm_theme' ] : 'default';
+		$cm_theme = isset( $options[ 'cm_theme' ] ) ? $options[ 'cm_theme' ] : '';
 		
 		wp_enqueue_style( 'sns-options-styles', plugins_url('css/options-styles.css', Scripts_n_Styles::$file), array( 'codemirror' ), Scripts_n_Styles::VERSION );
-		wp_enqueue_style( 'codemirror', plugins_url( 'libraries/CodeMirror2/lib/codemirror.css', Scripts_n_Styles::$file), array(), '2.18' );
+		wp_enqueue_style( 'codemirror', plugins_url( 'libraries/CodeMirror2/lib/codemirror.css', Scripts_n_Styles::$file), array(), '2.2' );
 		
-		foreach ( array( 'cobalt', 'default', 'eclipse', 'elegant', 'monokai', 'neat', 'night', 'rubyblue' ) as $theme )
-			wp_enqueue_style( "codemirror-$theme", plugins_url( "libraries/CodeMirror2/theme/$theme.css", Scripts_n_Styles::$file), array( 'codemirror' ), '2.18' );
+		foreach ( array( 'cobalt', 'eclipse', 'elegant', 'monokai', 'neat', 'night', 'rubyblue' ) as $theme )
+			wp_enqueue_style( "codemirror-$theme", plugins_url( "libraries/CodeMirror2/theme/$theme.css", Scripts_n_Styles::$file), array( 'codemirror' ), '2.2' );
 		
 		wp_enqueue_script( 'sns-settings-page-scripts', plugins_url('js/settings-page.js', Scripts_n_Styles::$file), array( 'jquery', 'codemirror-css', 'codemirror-javascript' ), Scripts_n_Styles::VERSION, true );
 		wp_localize_script( 'sns-settings-page-scripts', 'codemirror_options', array( 'theme' => $cm_theme ) );
-		wp_enqueue_script( 'codemirror', plugins_url( 'libraries/CodeMirror2/lib/codemirror.js', Scripts_n_Styles::$file), array(), '2.18' );
-		wp_enqueue_script( 'codemirror-css', plugins_url( 'libraries/CodeMirror2/mode/css/css.js', Scripts_n_Styles::$file), array( 'codemirror' ), '2.18' );
-		wp_enqueue_script( 'codemirror-javascript', plugins_url( 'libraries/CodeMirror2/mode/javascript/javascript.js', Scripts_n_Styles::$file), array( 'codemirror' ), '2.18' );
-
-		wp_enqueue_script( 'codemirror-xml', plugins_url( 'libraries/CodeMirror2/mode/xml/xml.js', Scripts_n_Styles::$file), array( 'codemirror' ), '2.18' );
-		wp_enqueue_script( 'codemirror-clike', plugins_url( 'libraries/CodeMirror2/mode/clike/clike.js', Scripts_n_Styles::$file), array( 'codemirror' ), '2.18' );
-		wp_enqueue_script( 'codemirror-php', plugins_url( 'libraries/CodeMirror2/mode/php/php.js', Scripts_n_Styles::$file), array( 'codemirror-xml', 'codemirror-css', 'codemirror-javascript', 'codemirror-clike' ), '2.18' );
+		wp_enqueue_script( 'codemirror', plugins_url( 'libraries/CodeMirror2/lib/codemirror.js', Scripts_n_Styles::$file), array(), '2.2' );
+		wp_enqueue_script( 'codemirror-css', plugins_url( 'libraries/CodeMirror2/mode/css/css.js', Scripts_n_Styles::$file), array( 'codemirror' ), '2.2' );
+		wp_enqueue_script( 'codemirror-javascript', plugins_url( 'libraries/CodeMirror2/mode/javascript/javascript.js', Scripts_n_Styles::$file), array( 'codemirror' ), '2.2' );
+	
+		wp_enqueue_script( 'codemirror-xml', plugins_url( 'libraries/CodeMirror2/mode/xml/xml.js', Scripts_n_Styles::$file), array( 'codemirror' ), '2.2' );
+		wp_enqueue_script( 'codemirror-clike', plugins_url( 'libraries/CodeMirror2/mode/clike/clike.js', Scripts_n_Styles::$file), array( 'codemirror' ), '2.2' );
+		wp_enqueue_script( 'codemirror-php', plugins_url( 'libraries/CodeMirror2/mode/php/php.js', Scripts_n_Styles::$file), array( 'codemirror-xml', 'codemirror-css', 'codemirror-javascript', 'codemirror-clike' ), '2.2' );
 	}
 	
 	static function parent_file( $parent_file ) {
@@ -59,12 +59,12 @@ class SnS_Settings_Page
 		if ( self::MENU_SLUG == $plugin_page ) $submenu_file = SnS_Admin::MENU_SLUG;
 		return $parent_file;
 	}
-
 	
-    /**
+	
+	/**
 	 * Settings Page
 	 * Adds Admin Menu Item via WordPress' "Administration Menus" API. Also hook actions to register options via WordPress' Settings API.
-     */
+	 */
 	function admin_load() {
 		wp_enqueue_style( 'sns-options-styles', plugins_url('css/options-styles.css', Scripts_n_Styles::$file), array(), Scripts_n_Styles::VERSION );
 		
@@ -77,6 +77,22 @@ class SnS_Settings_Page
 			__( 'Scripts n Styles Settings', 'scripts-n-styles' ),
 			array( __CLASS__, 'settings_section' ),
 			SnS_Admin::MENU_SLUG );
+		
+		add_settings_field(
+			'metabox',
+			__( '<strong>Hide Metabox by default</strong>: ', 'scripts-n-styles' ),
+			array( 'SnS_Form', 'radio' ),
+			SnS_Admin::MENU_SLUG,
+			'settings',
+			array(
+				'label_for' => 'metabox',
+				'setting' => 'SnS_options',
+				'choices' => array( 'yes', 'no' ),
+				'layout' => 'horizontal',
+				'default' => 'yes',
+				'legend' => __( 'Hide Metabox by default', 'scripts-n-styles' ),
+				'description' => __( '<span class="description" style="max-width: 500px; display: inline-block;">This is overridable via Screen Options on each edit screen.</span>', 'scripts-n-styles' )
+			) );
 		
 		add_settings_field(
 			'menu_position',
@@ -92,43 +108,30 @@ class SnS_Settings_Page
 				'style' => 'height: auto;'
 			) );
 		
-		add_settings_field(
-			'cm_theme',
-			__( '<strong>CodeMirror Theme</strong>: ', 'scripts-n-styles' ),
-			array( 'SnS_Form', 'select' ),
-			SnS_Admin::MENU_SLUG,
-			'settings',
-			array(
-				'label_for' => 'cm_theme',
-				'setting' => 'SnS_options',
-				'choices' => array( 'cobalt', 'default', 'eclipse', 'elegant', 'monokai', 'neat', 'night', 'rubyblue' ),
-				'size' => 8,
-				'style' => 'height: auto;'
-			) );
-		
-		add_settings_field(
-			'metabox',
-			__( '<strong>Hide Metabox by default</strong>: ', 'scripts-n-styles' ),
-			array( 'SnS_Form', 'radio' ),
-			SnS_Admin::MENU_SLUG,
-			'settings',
-			array(
-				'label_for' => 'metabox',
-				'setting' => 'SnS_options',
-				'choices' => array( 'yes', 'no' ),
-				'default' => 'yes',
-				'legend' => __( 'Hide Metabox by default', 'scripts-n-styles' ),
-				'description' => __( '<span class="description" style="max-width: 500px; display: inline-block;">This is overridable via Screen Options on each edit screen.</span>', 'scripts-n-styles' )
-			) );
-		
 		add_settings_section(
 			'demo',
 			__( 'Code Mirror Demo', 'scripts-n-styles' ),
 			array( __CLASS__, 'demo_section' ),
 			SnS_Admin::MENU_SLUG );
+		
+		add_settings_field(
+			'cm_theme',
+			__( '<strong>Theme</strong>: ', 'scripts-n-styles' ),
+			array( 'SnS_Form', 'radio' ),
+			SnS_Admin::MENU_SLUG,
+			'demo',
+			array(
+				'label_for' => 'cm_theme',
+				'setting' => 'SnS_options',
+				'choices' => array( 'default', 'cobalt', 'eclipse', 'elegant', 'monokai', 'neat', 'night', 'rubyblue' ),
+				'default' => 'default',
+				'legend' => __( 'Theme', 'scripts-n-styles' ),
+				'layout' => 'horizontal',
+				'description' => ''
+			) );
 	}
 	
-    /**
+	/**
 	 * Settings Page
 	 * Outputs Description text for the Global Section.
 	 */
@@ -140,7 +143,7 @@ class SnS_Settings_Page
 		<?php
 	}
 	
-    /**
+	/**
 	 * Settings Page
 	 * Outputs Description text for the Global Section.
 	 */

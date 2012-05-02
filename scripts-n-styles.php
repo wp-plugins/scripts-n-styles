@@ -5,8 +5,8 @@ Plugin URI: http://www.unfocus.com/projects/scripts-n-styles/
 Description: Allows WordPress admin users the ability to add custom CSS and JavaScript directly to individual Post, Pages or custom post types.
 Author: unFocus Projects
 Author URI: http://www.unfocus.com/
-Version: 3.0.3
-License: GPLv2 or later
+Version: 3.1-a1
+License: GPLv3 or later
 Text Domain: scripts-n-styles
 Network: true
 */
@@ -15,7 +15,7 @@ Network: true
 
 	This program is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
-	as published by the Free Software Foundation; either version 2
+	as published by the Free Software Foundation; either version 3
 	of the License, or (at your option) any later version.
 	
 	This program is distributed in the hope that it will be useful,
@@ -26,6 +26,8 @@ Network: true
 	You should have received a copy of the GNU General Public License
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+	
+	This file incorporates work covered by other licenses and permissions.
 */
 
 /**
@@ -47,7 +49,7 @@ Network: true
  * @link http://www.unfocus.com/projects/scripts-n-styles/ Plugin URI
  * @author unFocus Projects
  * @link http://www.unfocus.com/ Author URI
- * @version 3.0.3
+ * @version 3.1-a1
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @copyright Copyright (c) 2010 - 2012, Kenneth Newman
  * 
@@ -69,17 +71,17 @@ Network: true
 
 class Scripts_n_Styles
 {
-    /**#@+
-     * @static
-     */
-	const VERSION = '3.0.3';
+	/**#@+
+	 * @static
+	 */
+	const VERSION = '3.1-a1';
 	static $file = __FILE__;
-    /**#@-*/
+	/**#@-*/
 	
-    /**
+	/**
 	 * Initializing method. Checks if is_admin() and registers action hooks for admin if true. Sets filters and actions for Theme side functions.
-     * @static
-     */
+	 * @static
+	 */
 	static function init() {
 		if ( is_admin() && ! ( defined('DISALLOW_UNFILTERED_HTML') && DISALLOW_UNFILTERED_HTML ) ) {
 			/*	NOTE: Setting the DISALLOW_UNFILTERED_HTML constant to
@@ -98,11 +100,33 @@ class Scripts_n_Styles
 		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'enqueue_scripts' ), 11 );
 		add_action( 'wp_head', array( __CLASS__, 'scripts_in_head' ), 11 );
 		add_action( 'wp_footer', array( __CLASS__, 'scripts' ), 11 );
+		
+		add_shortcode( 'sns_shortcode', array( __CLASS__, 'shortcode' ) );
+	}
+	
+	function shortcode( $atts, $content = null, $tag ) {
+		global $post;
+		
+		if ( isset( $post->ID ) ) $id = $post->ID;
+		else $id = get_the_ID();
+		if ( ! $id ) return '<pre>There was an error.</pre>';
+		
+		extract( shortcode_atts( array( 'name' => 0, ), $atts ) );
+		$output = '';
+		
+		$SnS = get_post_meta( $post->ID, '_SnS', true );
+		$shortcodes = isset( $SnS['shortcodes'] ) ? $SnS[ 'shortcodes' ]: array();
+		if ( isset( $shortcodes[ $name ] ) )
+			$output .= $shortcodes[ $name ];
+		if ( isset( $content ) && empty( $output ) ) $output = $content;
+		$output = do_shortcode( $output );
+		
+		return $output;
 	}
 	
 	/**
 	 * Utility Method
-     */
+	 */
 	static function get_wp_registered() {
 		return array(
 				// Starting with the list of Scripts registered by default on the Theme side (index page of twentyten).
@@ -167,16 +191,21 @@ class Scripts_n_Styles
 			);
 	}
 	
-    /**
+	/**
 	 * Theme Action: 'wp_head()'
 	 * Outputs the globally and individually set Styles in the Theme's head element.
-     */
+	 */
 	static function styles() {
 		// Global
 		$options = get_option( 'SnS_options' );
 		if ( ! empty( $options ) && ! empty( $options[ 'styles' ] ) ) {
-			?><style type="text/css"><?php
+			?><style type="text/css" id="sns_global_styles"><?php
 			echo $options[ 'styles' ];
+			?></style><?php
+		}
+		if ( ! empty( $options ) && ! empty( $options[ 'compiled' ] ) ) {
+			?><style type="text/css" id="sns_global_less_compiled"><?php
+			echo $options[ 'compiled' ];
 			?></style><?php
 		}
 		
@@ -186,21 +215,21 @@ class Scripts_n_Styles
 		$SnS = get_post_meta( $post->ID, '_SnS', true );
 		$styles = isset( $SnS['styles'] ) ? $SnS[ 'styles' ]: array();
 		if ( ! empty( $styles ) && ! empty( $styles[ 'styles' ] ) ) {
-			?><style type="text/css"><?php
+			?><style type="text/css" id="sns_styles"><?php
 			echo $styles[ 'styles' ];
 			?></style><?php
 		}
 	}
 	
-    /**
+	/**
 	 * Theme Action: 'wp_footer()'
 	 * Outputs the globally and individually set Scripts at the end of the Theme's body element.
-     */
+	 */
 	static function scripts() {
 		// Global
 		$options = get_option( 'SnS_options' );
 		if ( ! empty( $options ) && ! empty( $options[ 'scripts' ] ) ) {
-			?><script type="text/javascript"><?php
+			?><script type="text/javascript" id="sns_global_scripts"><?php
 			echo $options[ 'scripts' ];
 			?></script><?php
 		}
@@ -211,21 +240,21 @@ class Scripts_n_Styles
 		$SnS = get_post_meta( $post->ID, '_SnS', true );
 		$scripts = isset( $SnS['scripts'] ) ? $SnS[ 'scripts' ]: array();
 		if ( ! empty( $scripts ) && ! empty( $scripts[ 'scripts' ] ) ) {
-			?><script type="text/javascript"><?php
+			?><script type="text/javascript" id="sns_scripts"><?php
 			echo $scripts[ 'scripts' ];
 			?></script><?php
 		}
 	}
 	
-    /**
+	/**
 	 * Theme Action: 'wp_head()'
 	 * Outputs the globally and individually set Scripts in the Theme's head element.
-     */
+	 */
 	static function scripts_in_head() {
 		// Global
 		$options = get_option( 'SnS_options' );
 		if ( ! empty( $options ) && ! empty( $options[ 'scripts_in_head' ] ) ) {
-			?><script type="text/javascript"><?php
+			?><script type="text/javascript" id="sns_global_scripts_in_head"><?php
 			echo $options[ 'scripts_in_head' ];
 			?></script><?php
 		}
@@ -236,19 +265,19 @@ class Scripts_n_Styles
 		$SnS = get_post_meta( $post->ID, '_SnS', true );
 		$scripts = isset( $SnS['scripts'] ) ? $SnS[ 'scripts' ]: array();
 		if ( ! empty( $scripts ) && ! empty( $scripts[ 'scripts_in_head' ] ) ) {
-			?><script type="text/javascript"><?php
+			?><script type="text/javascript" id="sns_scripts_in_head"><?php
 			echo $scripts[ 'scripts_in_head' ];
 			?></script><?php
 		}
 	}
 	
-    /**
+	/**
 	 * Theme Filter: 'body_class()'
 	 * Adds classes to the Theme's body tag.
 	 * @uses self::get_styles()
 	 * @param array $classes 
 	 * @return array $classes 
-     */
+	 */
 	static function body_classes( $classes ) {
 		if ( ! is_singular() || is_admin() ) return $classes;
 		
@@ -261,12 +290,12 @@ class Scripts_n_Styles
 		return $classes;
 	}
 	
-    /**
+	/**
 	 * Theme Filter: 'post_class()'
 	 * Adds classes to the Theme's post container.
 	 * @param array $classes 
 	 * @return array $classes 
-     */
+	 */
 	static function post_classes( $classes ) {
 		if ( ! is_singular() || is_admin() ) return $classes;
 		
@@ -280,10 +309,10 @@ class Scripts_n_Styles
 		return $classes;
 	}
 	
-    /**
+	/**
 	 * Theme Action: 'wp_enqueue_scripts'
 	 * Enqueues chosen Scripts.
-     */
+	 */
 	static function enqueue_scripts() {
 		// Global
 		$options = get_option( 'SnS_options' );
@@ -307,9 +336,9 @@ class Scripts_n_Styles
 		}
 	}
 	
-    /**
+	/**
 	 * Utility Method: Compares VERSION to stored 'version' value.
-     */
+	 */
 	static function upgrade_check() {
 		$options = get_option( 'SnS_options' );
 		if ( ! isset( $options[ 'version' ] ) || version_compare( self::VERSION, $options[ 'version' ], '>' ) ) {

@@ -1,7 +1,7 @@
 jQuery( document ).ready( function( $ ) {
 	
 	// For compat: 3.3 || 3.2 
-	var initData = tinyMCEPreInit.mceInit["content"] || tinyMCEPreInit.mceInit,
+	var initData = tinyMCEPreInit.mceInit["content"],
 		context = '#SnS_meta_box',
 		currentCodeMirror = [],
 		mceBodyClass = getMCEBodyClasses(),
@@ -266,22 +266,32 @@ jQuery( document ).ready( function( $ ) {
 					indentUnit: 4,
 					indentWithTabs: true
 				};
-			/*else if ( $(this).hasClass( 'htmlmixed' ) )
+			else if ( $(this).hasClass( 'less' ) )
 				settings = {
-					mode: "text/html",
+					mode: "text/x-less",
+					theme: theme,
 					lineNumbers: true,
 					tabMode: "shift",
-					indentUnit: 8,
+					indentUnit: 4,
+					indentWithTabs: true,
+				};
+			else if ( $(this).hasClass( 'htmlmixed' ) )
+				settings = {
+					mode: "text/html",
+					theme: theme,
+					lineNumbers: true,
+					tabMode: "shift",
+					indentUnit: 4,
 					indentWithTabs: true,
 					enterMode: "keep",
 					matchBrackets: true
 				};
-			else if ( $(this).hasClass( 'php' ) )
+			/*else if ( $(this).hasClass( 'php' ) )
 				settings = {
 					mode: "application/x-httpd-php",
 					lineNumbers: true,
 					tabMode: "shift",
-					indentUnit: 8,
+					indentUnit: 4,
 					indentWithTabs: true,
 					enterMode: "keep",
 					matchBrackets: true
@@ -339,8 +349,6 @@ jQuery( document ).ready( function( $ ) {
 	function refreshBodyClass( data ) {
 		initData.body_class = mceBodyClass + ' ' + data.classes_body + ' ' + data.classes_post;
 		
-		// needed for < 3.3
-		if ( tinymce.settings ) tinymce.settings.body_class = initData.body_class;
 		refreshMCE();
 	}
 	function refreshStyleFormats( data ) {
@@ -373,22 +381,16 @@ jQuery( document ).ready( function( $ ) {
 			}
 			initData.style_formats = style_formats;
 			
-			// needed for < 3.3
-			if ( tinymce.settings ) tinymce.settings.style_formats = initData.style_formats;
 			if ( initData.theme_advanced_buttons2.indexOf( "styleselect" ) == -1 ) {
 				var tempString = "styleselect,";
 				initData.theme_advanced_buttons2 = tempString.concat(initData.theme_advanced_buttons2);
 			}
 			
-			// needed for < 3.3
-			if ( tinymce.settings ) tinymce.settings.theme_advanced_buttons2 = initData.theme_advanced_buttons2;
 			$( '#delete-mce-dropdown-names', context ).show();
 		} else {
 			delete initData.style_formats;
 			initData.theme_advanced_buttons2 = initData.theme_advanced_buttons2.replace("styleselect,", "");
 			
-			// needed for < 3.3
-			if ( tinymce.settings ) tinymce.settings.theme_advanced_buttons2 = initData.theme_advanced_buttons2;
 			$( '#delete-mce-dropdown-names', context ).hide();
 		}
 		
@@ -399,26 +401,16 @@ jQuery( document ).ready( function( $ ) {
 		var ed = tinyMCE.editors["content"];
 		// If Visual has been activated.
 		if ( ed ) {
-			// needed for < 3.3 editor initialization.
-			if ( ! $( '#content' ).hasClass( '.theEditor' ) ) $( '#content' ).addClass( 'theEditor' );
-			
 			if ( ed.isHidden() ) {
 				refreshMCEhelper(ed);
 			} else {
-				// you've got to be kidding me.
-				if ( 1 == $('#content-html').length )
-					$('#content-html').click(); // 3.3
-				else if( 1 == $('#edButtonHTML').length )
-					switchEditors.go('content', 'html'); // 3.2
+				$('#content-html').click(); // 3.3
 				
 				refreshMCEhelper(ed);
 				
-				if ( 1 == $('#content-tmce').length )
-					$('#content-tmce').click(); // 3.3
-				else if( 1 == $('#edButtonPreview').length )
-					switchEditors.go('content', 'tinymce'); // 3.2
+				$('#content-tmce').click(); // 3.3
 			}
-		
+			
 		}
 		// Else nothing.
 		
@@ -433,5 +425,6 @@ jQuery( document ).ready( function( $ ) {
 		ed = new tinymce.Editor( 'content', initData );
 		ed.render();
 		ed.hide();
-	}	
+	}
+	
 });

@@ -9,10 +9,10 @@
 		
 class SnS_Form
 {
-    /**
+	/**
 	 * Settings Page
 	 * Outputs a textarea for setting 'scripts_in_head'.
-     */
+	 */
 	function textarea( $args ) {
 		extract( $args );
 		$options = get_option( $setting );
@@ -24,7 +24,7 @@ class SnS_Form
 		$output .= ( $cols ) ? ' cols="' . $cols . '"': '';
 		$output .= ' name="' . $setting . '[' . $label_for . ']"';
 		$output .= ' id="' . $label_for . '">';
-		$output .= $value . '</textarea>';
+		$output .= esc_textarea( $value ) . '</textarea>';
 		if ( $description ) {
 			$output .= $description;
 		}
@@ -49,7 +49,7 @@ class SnS_Form
 			$output .= checked( $value, $choice, false );
 			$output .= ' value="' . $choice . '" name="' . $setting . '[' . $label_for . ']"> ' . $choice;
 			$output .= '</label>';
-			$output .= '<br>';
+			$output .= ( ! isset( $layout ) || 'horizontal' != $layout ) ? '<br>' : ' &nbsp; ';
 		}
 		$output .= '</p></fieldset>';
 		if ( $description ) {
@@ -58,10 +58,10 @@ class SnS_Form
 		echo $output;
 	}
 	
-    /**
+	/**
 	 * Settings Page
 	 * Outputs a select element for selecting options to set scripts for including.
-     */
+	 */
 	function select( $args ) {
 		extract( $args );
 		$options = get_option( $setting );
@@ -94,10 +94,10 @@ class SnS_Form
 		echo $output;
 	}
 	
-    /**
+	/**
 	 * Settings Page
 	 * Outputs the Admin Page and calls the Settings registered with the Settings API.
-     */
+	 */
 	function take_action() {
 		global $action, $option_page, $page, $new_whitelist_options;
 		
@@ -149,10 +149,10 @@ class SnS_Form
 		return;
 	}
 
-    /**
+	/**
 	 * Settings Page
 	 * Outputs the Admin Page and calls the Settings registered with the Settings API in init_options_page().
-     */
+	 */
 	function page() {
 		?>
 		<div class="wrap">
