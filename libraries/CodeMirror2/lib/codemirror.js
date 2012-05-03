@@ -39,7 +39,7 @@ var CodeMirror = (function() {
         lineSpace = gutter.nextSibling.firstChild, measure = lineSpace.firstChild,
         cursor = measure.nextSibling, selectionDiv = cursor.nextSibling,
         lineDiv = selectionDiv.nextSibling;
-    themeChanged();
+    themeChanged(); keyMapChanged();
     // Needed to hide big blue blinking cursor on Mobile Safari
     if (ios) input.style.width = "0px";
     if (!webkit) lineSpace.draggable = true;
@@ -164,6 +164,7 @@ var CodeMirror = (function() {
         else if (option == "theme") themeChanged();
         else if (option == "lineWrapping" && oldVal != value) operation(wrappingChanged)();
         else if (option == "tabSize") updateDisplay(true);
+        else if (option == "keyMap") keyMapChanged();
         if (option == "lineNumbers" || option == "gutter" || option == "firstLineNumber" || option == "theme") {
           gutterChanged();
           updateDisplay(true);
@@ -369,6 +370,7 @@ var CodeMirror = (function() {
         return;
       case 2:
         if (start) setCursor(start.line, start.ch, true);
+        setTimeout(focusInput, 20);
         return;
       }
       // For button 1, if it was clicked inside the editor
@@ -554,6 +556,7 @@ var CodeMirror = (function() {
       if (stopped) handled = false;
       if (handled) {
         e_preventDefault(e);
+        restartBlink();
         if (ie) { e.oldKeyCode = e.keyCode; e.keyCode = 0; }
       }
       return handled;
@@ -561,7 +564,10 @@ var CodeMirror = (function() {
     function handleCharBinding(e, ch) {
       var handled = lookupKey("'" + ch + "'", options.extraKeys,
                               options.keyMap, function(b) { return doHandleBinding(b, true); });
-      if (handled) e_preventDefault(e);
+      if (handled) {
+        e_preventDefault(e);
+        restartBlink();
+      }
       return handled;
     }
 
@@ -1376,6 +1382,11 @@ var CodeMirror = (function() {
       scroller.className = scroller.className.replace(/\s*cm-s-\S+/g, "") +
         options.theme.replace(/(^|\s)\s*/g, " cm-s-");
     }
+    function keyMapChanged() {
+      var style = keyMap[options.keyMap].style;
+      wrapper.className = wrapper.className.replace(/\s*cm-keymap-\S+/g, "") +
+        (style ? " cm-keymap-" + style : "");
+    }
 
     function TextMarker() { this.set = []; }
     TextMarker.prototype.clear = operation(function() {
@@ -2006,6 +2017,10 @@ var CodeMirror = (function() {
     indentMore: function(cm) {cm.indentSelection("add");},
     indentLess: function(cm) {cm.indentSelection("subtract");},
     insertTab: function(cm) {cm.replaceSelection("\t", "end");},
+    defaultTab: function(cm) {
+      if (cm.somethingSelected()) cm.indentSelection("add");
+      else cm.replaceSelection("\t", "end");
+    },
     transposeChars: function(cm) {
       var cur = cm.getCursor(), line = cm.getLine(cur.line);
       if (cur.ch > 0 && cur.ch < line.length - 1)
@@ -2023,7 +2038,7 @@ var CodeMirror = (function() {
   keyMap.basic = {
     "Left": "goCharLeft", "Right": "goCharRight", "Up": "goLineUp", "Down": "goLineDown",
     "End": "goLineEnd", "Home": "goLineStartSmart", "PageUp": "goPageUp", "PageDown": "goPageDown",
-    "Delete": "delCharRight", "Backspace": "delCharLeft", "Tab": "insertTab", "Shift-Tab": "indentAuto",
+    "Delete": "delCharRight", "Backspace": "delCharLeft", "Tab": "defaultTab", "Shift-Tab": "indentAuto",
     "Enter": "newlineAndIndent", "Insert": "toggleOverwrite"
   };
   // Note that the save and find-related commands aren't defined by
@@ -2470,15 +2485,17 @@ var CodeMirror = (function() {
               if (wrapWBR) html.push("<wbr>");
             }
             html.push(open);
-            span_(text.slice(wrapAt - outPos), style);
+            var cut = wrapAt - outPos;
+            span_(window.opera ? text.slice(cut, cut + 1) : text.slice(cut), style);
             html.push("</span>");
+            if (window.opera) span_(text.slice(cut + 1), style);
             wrapAt--;
             outPos += l;
           } else {
             outPos += l;
             span_(text, style);
             // Output empty wrapper when at end of line
-            if (outPos == wrapAt && outPos == len) html.push(open + "</span>");
+            if (outPos == wrapAt && outPos == len) html.push(open + " </span>");
             // Stop outputting HTML when gone sufficiently far beyond measure
             else if (outPos > wrapAt + 10 && /\s/.test(text)) span = function(){};
           }
