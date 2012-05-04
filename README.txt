@@ -16,7 +16,9 @@ Admin's can also add classes to the TinyMCE "Formats" dropdown which users can u
 
 Because only well trusted users should ever be allowed to insert JavaScript directly into the pages of your site, this plugin restricts usage to admin type users. Admin's have access to even more sensitive areas by definition, so that should be relatively safe ;)
 
-### Notes about the implementation: ###
+### Notes 
+
+About the implementation: 
 
 *   Admin users, or more specifically, *any user with the `manage_options` and `unfiltered_html` capabilities* (which by default is *only* the admin type user) can use this plugin's functionality. Some plugins extend user rolls, and so this plugin would naturally extend include rolls that have the appropriate capability.
 *   CSS Styles are embeded, not linked, at the bottom of the `head` element with `style` tags by using `wp-head`. If your theme doesn't have this hook, this plugin (as well as most others) won't work.
