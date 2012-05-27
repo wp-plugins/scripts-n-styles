@@ -1,5 +1,5 @@
 === Scripts n Styles ===
-Contributors: WraithKenny, Touvan
+Contributors: WraithKenny, CaptainN
 Tags: admin, CSS, javascript, code, custom, Style
 Requires at least: 3.3
 Tested up to: 3.4-beta3
