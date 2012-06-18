@@ -5,27 +5,29 @@ Plugin URI: http://www.unfocus.com/projects/scripts-n-styles/
 Description: Allows WordPress admin users the ability to add custom CSS and JavaScript directly to individual Post, Pages or custom post types.
 Author: unFocus Projects
 Author URI: http://www.unfocus.com/
-Version: 3.1.1
+Version: 3.2-rc1
 License: GPLv3 or later
 Text Domain: scripts-n-styles
 Network: true
 */
 
-/*  Copyright 2010-2012  Kenneth Newman  www.unfocus.com
+/*  The Scripts n Styles WordPress Plugin
+	Copyright (c) 2010-2012  Kenneth Newman  <http://www.unfocus.com/>
+	Copyright (c) 2012  Kevin Newman  <http://www.unfocus.com/>
+	Copyright (c) 2012  adcSTUDIO LLC <http://www.adcstudio.com/>
 
-	This program is free software; you can redistribute it and/or
+	Scripts n Styles is free software; you can redistribute it and/or
 	modify it under the terms of the GNU General Public License
 	as published by the Free Software Foundation; either version 3
 	of the License, or (at your option) any later version.
 	
-	This program is distributed in the hope that it will be useful,
+	Scripts n Styles is distributed in the hope that it will be useful,
 	but WITHOUT ANY WARRANTY; without even the implied warranty of
 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 	GNU General Public License for more details.
 	
 	You should have received a copy of the GNU General Public License
-	along with this program; if not, write to the Free Software
-	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+	along with this program. If not, see <http://www.gnu.org/licenses/>.
 	
 	This file incorporates work covered by other licenses and permissions.
 */
@@ -49,24 +51,17 @@ Network: true
  * @link http://www.unfocus.com/projects/scripts-n-styles/ Plugin URI
  * @author unFocus Projects
  * @link http://www.unfocus.com/ Author URI
- * @version 3.1.1
+ * @version 3.2-rc1
  * @license http://opensource.org/licenses/gpl-license.php GNU Public License
  * @copyright Copyright (c) 2010 - 2012, Kenneth Newman
+ * @copyright Copyright (c) 2012, Kevin Newman
+ * @copyright Copyright (c) 2012, adcSTUDIO LLC
  * 
- * @todo Add Post Type Selection on Options Page? Not sure that's useful.
- * @todo Add Conditional Tags support as alternative to Globally applying Scripts n Styles.
  * @todo Create ability to add and register scripts and styles for enqueueing (via Options page).
  * @todo Create selection on Option page of which to pick registered scripts to make available on edit screens.
- * @todo Create shortcode to embed html/javascript snippets. See http://scribu.net/wordpress/optimal-script-loading.html in which this is already figured out :-)
  * @todo Create shortcode registration on Options page to make those snippets available on edit screens.
- * @todo Create shortcode registration of html snippets on edit screens for single use.
  * @todo Add Error messaging.
- * @todo Replace Multi-Select element with something better.
- * @todo "Include Scripts" will be reintroduced when registering is finished.
  * @todo Clean up tiny_mce_before_init in SnS_Admin_Meta_Box.
- * @todo LESS.js support.
- * @todo LESS.js highlighting support to CodeMirror.
- * @todo Solarize theme to CodeMirror.
  */
 
 class Scripts_n_Styles
@@ -74,8 +69,9 @@ class Scripts_n_Styles
 	/**#@+
 	 * @static
 	 */
-	const VERSION = '3.1.1';
+	const VERSION = '3.2-rc1';
 	static $file = __FILE__;
+	static $cm_themes = array( 'default', 'ambiance', 'blackboard', 'cobalt', 'eclipse', 'elegant', 'lesser-dark', 'monokai', 'neat', 'night', 'rubyblue', 'xq-dark' );
 	/**#@-*/
 	
 	/**
@@ -88,7 +84,7 @@ class Scripts_n_Styles
 				true in the wp-config.php would effectively disable this
 				plugin's admin because no user would have the capability.
 			*/
-			include_once( 'includes/class.SnS_Admin.php' );
+			include_once( 'includes/class-sns-admin.php' );
 			SnS_Admin::init();
 		}
 		add_action( 'plugins_loaded', array( __CLASS__, 'upgrade_check' ) );
@@ -101,24 +97,83 @@ class Scripts_n_Styles
 		add_action( 'wp_head', array( __CLASS__, 'scripts_in_head' ), 11 );
 		add_action( 'wp_footer', array( __CLASS__, 'scripts' ), 11 );
 		
-		add_shortcode( 'sns_shortcode', array( __CLASS__, 'shortcode' ) );
-	}
-	
-	function shortcode( $atts, $content = null, $tag ) {
-		global $post;
+		add_action( 'plugins_loaded', array( __CLASS__, 'add_shortcodes' ) );
+		add_action( 'widgets_init', array( __CLASS__, 'add_widget' ) );
 		
-		if ( isset( $post->ID ) ) $id = $post->ID;
-		else $id = get_the_ID();
-		if ( ! $id ) return '<pre>There was an error.</pre>';
+		add_action( 'wp_enqueue_scripts', array( __CLASS__, 'register' ) );
+		add_action( 'admin_enqueue_scripts', array( __CLASS__, 'register' ) );
+		
+		add_action( 'wp_print_styles', array( __CLASS__, 'theme_style' ) );
+		add_action( 'wp_ajax_sns_theme_css', array( __CLASS__, 'theme_css' ) );
+		add_action( 'wp_ajax_nopriv_sns_theme_css', array( __CLASS__, 'theme_css' ) );
+	}
+	function theme_style() {
+		if ( current_theme_supports( 'scripts-n-styles' ) ) {
+			$options = get_option( 'SnS_options' );
+			$slug = get_stylesheet();
+			
+			if ( ! empty( $options[ 'themes' ][ $slug ][ 'compiled' ] ) ) {
+				wp_deregister_style( 'theme_style' );
+				wp_enqueue_style( 'theme_style', add_query_arg( array( 'action' => 'sns_theme_css' ), admin_url( "admin-ajax.php" ) ) );
+			}
+		}
+	}
+	function theme_css() {
+		$options = get_option( 'SnS_options' );
+		$slug = get_stylesheet();
+		$compiled = $options[ 'themes' ][ $slug ][ 'compiled' ];
+		header('Expires: ' . gmdate( "D, d M Y H:i:s", time() + 864000 ) . ' GMT');
+		header("Cache-Control: public, max-age=864000");
+		header('Content-Type: text/css; charset=UTF-8');
+		echo $compiled;
+		die();
+	}
+	function add_widget() {
+		$options = get_option( 'SnS_options' );
+		if ( 'yes' == $options[ 'hoops_widget' ] )
+			register_widget( 'SnS_Widget' );
+	}
+	function add_shortcodes() {
+		add_shortcode( 'sns_shortcode', array( __CLASS__, 'shortcode' ) );
+		add_shortcode( 'hoops', array( __CLASS__, 'shortcode' ) );
+	}
+	function shortcode( $atts, $content = null, $tag ) {
+		$id = get_the_ID();
 		
 		extract( shortcode_atts( array( 'name' => 0, ), $atts ) );
 		$output = '';
 		
-		$SnS = get_post_meta( $post->ID, '_SnS', true );
+		$options = get_option( 'SnS_options' );
+		$hoops = $options['hoops']['shortcodes'];
+		
+		$SnS = get_post_meta( $id, '_SnS', true );
 		$shortcodes = isset( $SnS['shortcodes'] ) ? $SnS[ 'shortcodes' ]: array();
+		
 		if ( isset( $shortcodes[ $name ] ) )
 			$output .= $shortcodes[ $name ];
-		if ( isset( $content ) && empty( $output ) ) $output = $content;
+		else if ( isset( $hoops[ $name ] ) )
+			$output .= $hoops[ $name ];
+			
+		if ( ! empty( $content ) && empty( $output ) )
+			$output = $content;
+		$output = do_shortcode( $output );
+		
+		return $output;
+	}
+	function hoops_widget( $atts, $content = null, $tag ) {
+		$options = get_option( 'SnS_options' );
+		$hoops = $options['hoops']['shortcodes'];
+		
+		extract( shortcode_atts( array( 'name' => 0, ), $atts ) );
+		$output = '';
+		
+		$shortcodes = isset( $SnS['shortcodes'] ) ? $SnS[ 'shortcodes' ]: array();
+		
+		if ( isset( $hoops[ $name ] ) )
+			$output .= $hoops[ $name ];
+		
+		if ( ! empty( $content ) && empty( $output ) )
+			$output = $content;
 		$output = do_shortcode( $output );
 		
 		return $output;
@@ -187,8 +242,61 @@ class Scripts_n_Styles
 				'user-profile',
 				'admin-bar',
 				'wplink',
-				'wpdialogs-popup'
+				'wpdialogs-popup',
+				'less.js',
+				'coffeescript',
+				'chosen',
 			);
+	}
+	function register() {
+		$dir = plugins_url( '/', __FILE__);
+		$js = $dir . 'js/';
+		$css = $dir . 'css/';
+		$cm_version = '2.25';
+		$chosen_version = '0.9.8';
+		$cm_dir = $dir . 'vendor/CodeMirror2/';
+		$less_dir = $dir . 'vendor/';
+		$coffee_dir = $dir . 'vendor/';
+		$chosen_dir = $dir . 'vendor/chosen/';
+		//$localize = array( 'theme' => $cm_theme );
+		$options = get_option( 'SnS_options' );
+		$cm_theme = isset( $options[ 'cm_theme' ] ) ? $options[ 'cm_theme' ] : 'default';
+		
+		wp_register_script( 'less.js', $less_dir . 'less.js', array(), '1.3.0-min' );
+		wp_register_script( 'coffeescript', $coffee_dir . 'coffee-script.js', array(), '1.3.3-min' );
+		wp_register_script( 'chosen', $chosen_dir . 'chosen.jquery.min.js', array( 'jquery' ), $chosen_version, true );
+		wp_register_style(  'chosen', $chosen_dir . 'chosen.css', array(), $chosen_version );
+		
+		wp_register_script( 'codemirror',              $cm_dir . 'lib/codemirror.js',                 array(), $cm_version );
+		wp_register_script( 'codemirror-css',          $cm_dir . 'mode/css/css.js',                   array( 'codemirror' ), $cm_version );
+		wp_register_script( 'codemirror-coffeescript', $cm_dir . 'mode/coffeescript/coffeescript.js', array( 'codemirror' ), $cm_version );
+		wp_register_script( 'codemirror-less',         $cm_dir . 'mode/less/less.js',                 array( 'codemirror' ), $cm_version );
+		wp_register_script( 'codemirror-javascript',   $cm_dir . 'mode/javascript/javascript.js',     array( 'codemirror' ), $cm_version );
+		wp_register_script( 'codemirror-xml',          $cm_dir . 'mode/xml/xml.js',                   array( 'codemirror' ), $cm_version );
+		wp_register_script( 'codemirror-clike',        $cm_dir . 'mode/clike/clike.js',               array( 'codemirror' ), $cm_version );
+		wp_register_script( 'codemirror-markdown',     $cm_dir . 'mode/markdown/markdown.js',         array( 'codemirror-xml' ), $cm_version );
+		wp_register_script( 'codemirror-gfm',          $cm_dir . 'mode/gfm/gfm.js',                   array( 'codemirror-php', 'codemirror-htmlmixed' ), $cm_version );
+		wp_register_script( 'codemirror-htmlmixed',    $cm_dir . 'mode/htmlmixed/htmlmixed.js',       array( 'codemirror-xml', 'codemirror-css', 'codemirror-javascript' ), $cm_version );
+		wp_register_script( 'codemirror-php',          $cm_dir . 'mode/php/php.js',                   array( 'codemirror-xml', 'codemirror-css', 'codemirror-javascript', 'codemirror-clike' ), $cm_version );
+		
+		wp_register_style(  'codemirror-default',    $cm_dir . 'lib/codemirror.css', array(), $cm_version );
+		foreach ( self::$cm_themes as $theme ) if ( 'default' !== $theme )
+			wp_register_style( "codemirror-$theme",  $cm_dir . "theme/$theme.css",   array( 'codemirror-default' ), $cm_version );
+		
+		if ( 'default' == $cm_theme )
+			wp_register_style( 'codemirror-theme', $cm_dir . 'lib/codemirror.css',  array(), $cm_version );
+		else
+			wp_register_style( 'codemirror-theme', $cm_dir . "theme/$cm_theme.css", array( 'codemirror-default' ), $cm_version );
+			
+		wp_register_style(  'sns-options', $css . 'options-styles.css', array(), self::VERSION );
+		wp_register_script( 'sns-global-page', $js . 'global-page.js', array( 'jquery', 'codemirror-less', 'codemirror-coffeescript', 'codemirror-css', 'codemirror-javascript', 'less.js', 'coffeescript', 'chosen' ), self::VERSION, true );
+		wp_register_script( 'sns-theme-page', $js . 'theme-page.js', array( 'jquery', 'codemirror-css', 'codemirror-less', 'less.js', ), self::VERSION, true );
+		wp_register_script( 'sns-hoops-page', $js . 'hoops-page.js', array( 'jquery', 'codemirror-htmlmixed' ), self::VERSION, true );
+		wp_register_script( 'sns-settings-page', $js . 'settings-page.js', array( 'jquery', 'codemirror-php' ), self::VERSION, true );
+		wp_register_style(  'sns-meta-box', $css . 'meta-box.css', array( 'codemirror-theme' ), self::VERSION );
+		wp_register_script( 'sns-meta-box', $js . 'meta-box.js', array( 'editor', 'jquery-ui-tabs', 'codemirror-less', 'codemirror-htmlmixed', 'chosen' ), self::VERSION, true );
+		wp_register_style(  'sns-code-editor', $css . 'code-editor.css', array( 'codemirror-theme' ), self::VERSION );
+		wp_register_script( 'sns-code-editor',  $js . 'code-editor.js',  array( 'editor', 'jquery-ui-tabs', 'codemirror-less', 'codemirror-coffeescript', 'codemirror-htmlmixed', 'codemirror-php', 'codemirror-markdown' ), self::VERSION, true );
 	}
 	
 	/**
@@ -231,6 +339,11 @@ class Scripts_n_Styles
 		if ( ! empty( $options ) && ! empty( $options[ 'scripts' ] ) ) {
 			?><script type="text/javascript" id="sns_global_scripts"><?php
 			echo $options[ 'scripts' ];
+			?></script><?php
+		}
+		if ( ! empty( $options ) && ! empty( $options[ 'coffee_compiled' ] ) ) {
+			?><script type="text/javascript" id="sns_global_coffee_compiled"><?php
+			echo $options[ 'coffee_compiled' ];
 			?></script><?php
 		}
 		
@@ -342,7 +455,7 @@ class Scripts_n_Styles
 	static function upgrade_check() {
 		$options = get_option( 'SnS_options' );
 		if ( ! isset( $options[ 'version' ] ) || version_compare( self::VERSION, $options[ 'version' ], '>' ) ) {
-			include_once( 'includes/class.SnS_Admin.php' );
+			include_once( 'includes/class-sns-admin.php' );
 			SnS_Admin::upgrade();
 		}
 	}
@@ -350,4 +463,65 @@ class Scripts_n_Styles
 
 Scripts_n_Styles::init();
 
+class SnS_Widget extends WP_Widget
+{
+	function __construct() {
+		$widget_ops = array( 'classname' => 'sns_widget_text', 'description' => __( 'Arbitrary text or HTML (including "hoops" shortcodes)', 'scripts-n-styles' ) );
+		$control_ops = array( 'width' => 400, 'height' => 350 );
+		parent::__construct( 'sns_hoops', __( 'Hoops', 'scripts-n-styles' ), $widget_ops, $control_ops );
+	}
+
+	function widget( $args, $instance ) {
+		global $shortcode_tags;
+		
+		extract( $args );
+		$title = apply_filters( 'widget_title', empty( $instance[ 'title' ] ) ? '' : $instance[ 'title' ], $instance, $this->id_base );
+		$text = apply_filters( 'widget_text', empty( $instance[ 'text' ] ) ? '' : $instance[ 'text' ], $instance );
+		
+		echo $before_widget;
+		if ( ! empty( $title ) )
+			echo $before_title . $title . $after_title;
+		echo '<div class="hoopstextwidget">';
+		$content = ! empty( $instance[ 'filter' ] ) ? wpautop( $text ) : $text;
+			
+		$backup = $shortcode_tags;
+		remove_all_shortcodes();
+		
+		add_shortcode( 'sns_shortcode', array( 'Scripts_n_Styles', 'hoops_widget' ) );
+		add_shortcode( 'hoops', array( 'Scripts_n_Styles', 'hoops_widget' ) );
+		
+		$content = do_shortcode( $content );
+		
+		$shortcode_tags = $backup;
+		
+		echo $content;
+		echo '</div>';
+		echo $after_widget;
+	}
+
+	function update( $new_instance, $old_instance ) {
+		$instance = $old_instance;
+		$instance[ 'title' ] = strip_tags( $new_instance[ 'title' ] );
+		if ( current_user_can( 'unfiltered_html' ) )
+			$instance[ 'text' ] =  $new_instance[ 'text' ];
+		else
+			$instance[ 'text' ] = stripslashes( wp_filter_post_kses( addslashes( $new_instance[ 'text' ] ) ) ); // wp_filter_post_kses() expects slashed
+		$instance[ 'filter' ] = isset( $new_instance[ 'filter' ] );
+		return $instance;
+	}
+
+	function form( $instance ) {
+		$instance = wp_parse_args( (array) $instance, array( 'title' => '', 'text' => '' ) );
+		$title = strip_tags( $instance[ 'title' ] );
+		$text = esc_textarea( $instance[ 'text' ] );
+		?>
+			<p><label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Title:' ); ?></label>
+			<input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>" name="<?php echo $this->get_field_name( 'title' ); ?>" type="text" value="<?php echo esc_attr( $title ); ?>" /></p>
+	
+			<textarea class="widefat" rows="16" cols="20" id="<?php echo $this->get_field_id( 'text' ); ?>" name="<?php echo $this->get_field_name( 'text' ); ?>"><?php echo $text; ?></textarea>
+	
+			<p><input id="<?php echo $this->get_field_id( 'filter' ); ?>" name="<?php echo $this->get_field_name( 'filter' ); ?>" type="checkbox" <?php checked( isset( $instance[ 'filter' ] ) ? $instance[ 'filter' ] : 0 ); ?> />&nbsp;<label for="<?php echo $this->get_field_id( 'filter' ); ?>"><?php _e( 'Automatically add paragraphs' ); ?></label></p>
+		<?php
+	}
+}
 ?>
