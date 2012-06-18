@@ -1,4 +1,4 @@
-# Scripts n Styles 
+# Scripts n Styles  
 Contributors: WraithKenny, CaptainN  
 Tags: admin, CSS, javascript, code, custom, Style  
 Requires at least: 3.4  
