@@ -1,8 +1,8 @@
 === Scripts n Styles ===
 Contributors: WraithKenny, CaptainN
 Tags: admin, CSS, javascript, code, custom, Style
-Requires at least: 3.4
-Tested up to: 3.5
+Requires at least: 3.6
+Tested up to: 3.6
 Stable tag: 3.2.1
 License: GPLv3 or later
 License URI: http://www.gnu.org/licenses/gpl-3.0.html
@@ -57,6 +57,9 @@ Sure, if you are an Admin, just go to the plugin editor and wipe out the uninsta
 6. Your styles are reflected in the Editor.
 
 == Changelog ==
+
+= 3.3 =
+* See the github repo commits
 
 = 3.2.1 =
 * metabox add shortcode bugfix
@@ -129,6 +132,9 @@ Sure, if you are an Admin, just go to the plugin editor and wipe out the uninsta
 * Initial Release.
 
 == Upgrade Notice ==
+
+= 3.3 =
+Bug fixes and lib upgrades
 
 = 3.2.1 =
 Bug fix (add shortcode)
